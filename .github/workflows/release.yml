@@ -111,6 +111,33 @@ jobs:
           echo "PHASE ID: ${PHASE_ID}"
           echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
+      - name: Download run_id from steves-test-repo2
+        uses: aochmann/actions-download-artifact@1.0.4
+        with:
+          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
+          name: run_id-${{ env.BRANCH_NAME }}.txt
+          latest: true
+          path: builder
+          repo: SKuhlmanns/steves-test-repo2
+
+      - name: Get Comm artifacts
+        working-directory: builder
+        run: |
+          # Set the run_id
+          cat run_id-${{ env.BRANCH_NAME }}.txt
+          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
+          rm run_id-${{ env.BRANCH_NAME }}.txt
+          # Use the run_id and token/password to get artifacts with an external bash script
+          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
+
+      - name: Display Comm contents
+        working-directory: builder
+        run: |
+          ls -l
+          cat version_num*.txt
+          echo "PHASE ID: ${PHASE_ID}"
+          echo "BUILD NUMBER: ${BUILD_NUMBER}"
+
       - name: Build the application
         working-directory: build
         run: |
