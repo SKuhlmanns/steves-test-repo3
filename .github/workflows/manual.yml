@@ -1,0 +1,150 @@
+name: Manual user branch build
+
+on: 
+  workflow_dispatch:
+#    branches:
+#      - develop
+#      - 'feature/**'
+#      - '*feature*'
+#    branches-ignore:
+#      - 'release_v*'
+#      - 'release/release_v*'
+    inputs:
+#      PHASE_ID:
+#        description: 'Phase Identifier (x, f, b or null)'
+#        required: false
+#        default: 'x'
+      LIB_BRANCH:
+        description: 'Common Library Branch Name'
+        required: true
+        default: 'develop'
+#      TAG:
+#        description: 'Tag (N/Y)'
+#        required: true
+#        default: 'N'
+#      TAG_NAME:
+#        description: 'Git Tag Name'
+#        required: false
+#        default: 'NOVOS_LIB_4.3.0'
+env:
+  DISPLAY_CONTEXT: ${{ secrets.DISPLAY_CONTEXT }} # To display github context for debugging
+
+jobs:
+
+  linux-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      PHASE_ID: x
+
+    steps:
+      - name: Set branch names
+        run: |
+          BRANCH_NAME=`echo ${{ github.ref }} | cut -d"/" -f3- | tr "/" "-"`
+          if [[ ${BRANCH_NAME} == 'release'* ]]; then
+            echo "Error - Do not use a develop or release branch!"
+            exit 1
+          elif [[ ${BRANCH_NAME} == develop ]]; then
+            echo "Error - Do not use a develop or release branch!"
+            exit 1
+          else 
+            echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+            LIB_BRANCH=`echo ${{ github.event.inputs.LIB_BRANCH }} | tr "/" "-"`
+            echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
+            echo "BRANCH_NAME:${BRANCH_NAME}"
+            echo "LIB_BRANCH:${LIB_BRANCH}"
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Make builder directory
+        run: |
+          mkdir -p builder
+
+      - name: Download run_id from steves-test-repo
+        uses: aochmann/actions-download-artifact@1.0.4
+        with:
+          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
+          name: run_id-${{ env.LIB_BRANCH }}.txt
+          latest: true
+          path: builder
+          repo: SKuhlmanns/steves-test-repo
+
+      - name: Get Library artifacts
+        working-directory: builder
+        run: |
+          # Set the run_id
+          cat run_id-${{ env.LIB_BRANCH }}.txt
+          run_id=`cat run_id-${{ env.LIB_BRANCH }}.txt`
+          rm run_id-${{ env.LIB_BRANCH }}.txt
+          # Use the run_id and token/password to get artifacts with an external bash script
+          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
+
+      - name: Display Library contents
+        working-directory: builder
+        run: |
+          ls -l
+          cat version_num*.txt
+
+      - name: Build the application
+        working-directory: build
+        run: |
+          echo "Repo Owner:" ${{ github.repository_owner }}
+          echo "Run ID:" ${{ github.run_id }}
+          echo ${{ github.run_id }} > run_id-${{ env.BRANCH_NAME }}.txt
+
+          export VER_NUM=`cat version.txt` 
+          echo "${VER_NUM}${PHASE_ID}-${BUILD_NUMBER}" > version_num_comm.txt
+          echo "PHASE ID: ${PHASE_ID}"
+          echo "BUILD NUMBER: ${BUILD_NUMBER}"
+          cat version_num*.txt
+          bash bbuild.sh .. 
+
+      - name: Upload version.txt artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-${{ env.BRANCH_NAME }}-txt
+          retention-days: 14
+          path: |
+            build/version.txt
+#            build/version_num_comm.txt
+
+      - name: Upload version_num.txt artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-num-${{ env.BRANCH_NAME }}-txt
+          retention-days: 14
+          path: |
+            build/version_num_comm.txt
+
+      - name: Upload run_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: run_id-${{ env.BRANCH_NAME }}.txt
+          retention-days: 14
+          path: |
+            build/run_id-${{ env.BRANCH_NAME }}.txt
+
+      - name: Dump context
+        if: ${{ env.DISPLAY_CONTEXT == 'true' }}
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          STEPS_CONTEXT: ${{ toJSON(steps) }}
+        run: |
+          echo "GITHUB CONTEXT:"
+          echo
+          echo "$GITHUB_CONTEXT"
+          echo
+          echo "JOB CONTEXT:"
+          echo
+          echo "$JOB_CONTEXT"
+          echo
+          echo "STEPS CONTEXT:"
+          echo
+          echo "$STEPS_CONTEXT"

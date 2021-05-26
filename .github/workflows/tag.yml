@@ -1,0 +1,131 @@
+name: Build tagged releases
+
+on: 
+  push:
+    tags:
+      - COMM_*    # Push events matching refs/heads/COMM_* tags
+      - NOVOS_*   # Push events matching refs/heads/NOVOS_* tags
+#  workflow_dispatch:
+
+env:
+  DISPLAY_CONTEXT: ${{ secrets.DISPLAY_CONTEXT }} # To display github context for debugging
+
+jobs:
+
+  linux-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      PHASE_ID: 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Make builder directory
+        run: |
+          mkdir -p builder
+
+      # Use this to help debug issues
+      - name: Dump context
+        # See Settings -> Secrets to turn this step on and off
+        if: ${{ env.DISPLAY_CONTEXT == 'true' }}
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          STEPS_CONTEXT: ${{ toJSON(steps) }}
+        run: |
+          echo "GITHUB CONTEXT:"
+          echo
+          echo "$GITHUB_CONTEXT"
+          echo
+          echo "JOB CONTEXT:"
+          echo
+          echo "$JOB_CONTEXT"
+          echo
+          echo "STEPS CONTEXT:"
+          echo
+          echo "$STEPS_CONTEXT"
+
+      - name: Set tag names from github reference
+        run: |
+          COMM_TAG_NAME=`basename ${{ github.ref }}`
+          LIB_TAG_NAME=`basename ${{ github.ref }}`
+          if [[ ${COMM_TAG_NAME} == 'COMM'* ]]; then
+            VERSION=`echo ${COMM_TAG_NAME} | cut -d"_" -f2`
+            LIB_TAG_NAME=LIB_${VERSION}
+          fi
+          echo "COMM_TAG_NAME: ${COMM_TAG_NAME}"
+          echo "LIB_TAG_NAME: ${LIB_TAG_NAME}"
+          echo "COMM_TAG_NAME=${COMM_TAG_NAME}" >> $GITHUB_ENV
+          echo "LIB_TAG_NAME=${LIB_TAG_NAME}" >> $GITHUB_ENV
+
+      - name: Download run_id from steves-test-repo
+        uses: aochmann/actions-download-artifact@1.0.4
+        with:
+          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
+          name: run_id-${{ env.LIB_TAG_NAME }}.txt
+          latest: true
+          path: builder
+          repo: SKuhlmanns/steves-test-repo
+
+      - name: Get Library artifacts
+        working-directory: builder
+        run: |
+          # Set the run_id
+          cat run_id-${{ env.LIB_TAG_NAME }}.txt
+          run_id=`cat run_id-${{ env.LIB_TAG_NAME }}.txt`
+          rm run_id-${{ env.LIB_TAG_NAME }}.txt
+          # Use the run_id and token/password to get artifacts with an external bash script
+          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
+
+      - name: Display Library contents
+        working-directory: builder
+        run: |
+          ls -l
+          cat version_num*.txt
+          echo "PHASE ID: ${PHASE_ID}"
+          echo "BUILD NUMBER: ${BUILD_NUMBER}"
+
+      - name: Build the application
+        working-directory: build
+        run: |
+          echo "Repo Owner:" ${{ github.repository_owner }}
+          echo "Run ID:" ${{ github.run_id }}
+          echo ${{ github.run_id }} > run_id-${{ env.COMM_TAG_NAME }}.txt
+
+          export VER_NUM=`cat version.txt` 
+          echo "${VER_NUM}${PHASE_ID}-${BUILD_NUMBER}" > version_num_comm.txt
+          PHASE_ID=${PHASE_ID}
+          echo "PHASE ID: ${PHASE_ID}"
+          cat version_num*.txt
+          bash bbuild.sh .. 
+
+      - name: Upload version.txt artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-${{ env.COMM_TAG_NAME }}-txt
+          retention-days: 90
+          path: |
+            build/version.txt
+#            build/version_num_comm.txt
+
+      - name: Upload version_num.txt artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-num-${{ env.COMM_TAG_NAME }}-txt
+          retention-days: 90
+          path: |
+            build/version_num_comm.txt
+
+      - name: Upload run_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: run_id-${{ env.COMM_TAG_NAME }}.txt
+          retention-days: 90
+          path: |
+            build/run_id-${{ env.COMM_TAG_NAME }}.txt
