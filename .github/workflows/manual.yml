@@ -112,7 +112,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: manual.yml
+          workflow: develop.yml
           #branch: ${{env.LIB_BRANCH}}
            # Optional, will use specified workflow run
           # run_id: 1122334455
@@ -125,7 +125,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: manual.yml
+          workflow: develop.yml
           #branch: ${{env.COMM_BRANCH}}
            # Optional, will use specified workflow run
            #run_id: 1122334455
