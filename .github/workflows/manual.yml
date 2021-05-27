@@ -18,10 +18,18 @@ on:
         description: 'Common Library Branch Name'
         required: true
         default: 'develop'
+      LIB_WORKFLOW:
+        description: 'Common Library Workflow Name'
+        required: true
+        default: 'develop.yml'
       COMM_BRANCH:
         description: 'Comm Branch Name'
         required: true
         default: 'develop'
+      COMM_WORKFLOW:
+        description: 'Comm Workflow Name'
+        required: true
+        default: 'develop.yml'
 #      TAG:
 #        description: 'Tag (N/Y)'
 #        required: true
@@ -112,10 +120,13 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: develop.yml
+          # Required, workflow file name or ID
+          workflow: ${{ github.event.inputs.LIB_WORKFLOW }}
+          #workflow_conclusion: "completed,success"
           #branch: ${{env.LIB_BRANCH}}
-           # Optional, will use specified workflow run
-          # run_id: 1122334455
+          # Optional, will use specified workflow run
+          #run_id: 1122334455
+          #run_number: 34
           #event: workflow_dispatch
           name: version-num-${{env.LIB_BRANCH}}-txt
           path: builder
@@ -125,10 +136,13 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: develop.yml
+          # Required, workflow file name or ID
+          workflow: ${{ github.event.inputs.COMM_WORKFLOW }}
+          #workflow_conclusion: "completed,success"
           #branch: ${{env.COMM_BRANCH}}
-           # Optional, will use specified workflow run
-           #run_id: 1122334455
+          # Optional, will use specified workflow run
+          #run_id: 1122334455
+          #run_number: 34
           #event: workflow_dispatch
           name: version-num-${{env.COMM_BRANCH}}-txt
           path: builder
