@@ -61,73 +61,6 @@ jobs:
           echo
           echo "$STEPS_CONTEXT"
 
-#      - name: Download artifacts from steves-test-repo
-#        uses: aochmann/actions-download-artifact@1.0.4
-#        with:
-#          # Optional, GitHub token
-#          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-#
-#          # Optional, uploaded artifact name,
-#          # will download all artifacts if not specified
-#          # and extract them in respective subdirectories
-#          # https://github.com/actions/download-artifact#download-all-artifacts
-#          name: version-num-${{ env.BRANCH_NAME }}-txt
-#
-#          # Optional, download latest artifact
-#          latest: true
-#
-#          # Optional, directory where to extract artifact
-#          path: builder
-#
-#          # Optional, defaults to current repo
-#          repo: SKuhlmanns/steves-test-repo
-
-#      - name: Download run_id from steves-test-repo
-#        uses: aochmann/actions-download-artifact@1.0.4
-#        with:
-#          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-#          name: run_id-${{ env.BRANCH_NAME }}.txt
-#          latest: true
-#          path: builder
-#          repo: SKuhlmanns/steves-test-repo
-
-#      - name: Get Library artifacts
-#        working-directory: builder
-#        run: |
-#          # Set the run_id
-#          cat run_id-${{ env.BRANCH_NAME }}.txt
-#          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-#          rm run_id-${{ env.BRANCH_NAME }}.txt
-#          # Use the run_id and token/password to get artifacts with an external bash script
-#          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
-
-#      - name: Display Library contents
-#        working-directory: builder
-#        run: |
-#          ls -l
-#          cat version_num*.txt
-#          echo "PHASE ID: ${PHASE_ID}"
-#          echo "BUILD NUMBER: ${BUILD_NUMBER}"
-
-#      - name: Download run_id from steves-test-repo2
-#        uses: aochmann/actions-download-artifact@1.0.4
-#        with:
-#          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-#          name: run_id-${{ env.BRANCH_NAME }}.txt
-#          latest: true
-#          path: builder
-#          repo: SKuhlmanns/steves-test-repo2
-
-#      - name: Get Comm artifacts
-#        working-directory: builder
-#        run: |
-#          # Set the run_id
-#          cat run_id-${{ env.BRANCH_NAME }}.txt
-#          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-#          rm run_id-${{ env.BRANCH_NAME }}.txt
-#          # Use the run_id and token/password to get artifacts with an external bash script
-#          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
-
       - name: Download Library artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -147,7 +80,7 @@ jobs:
           # Optional, no need to specify if PR is
           ##commit: ${{github.event.pull_request.head.sha}}
           # Optional, will use the branch
-          branch: develop
+          #branch: develop
           # Optional, defaults to all types
           #event: push
           # Optional, will use specified workflow run
@@ -170,11 +103,10 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           workflow: develop.yml
-          branch: develop
+          #branch: develop
           name: version-num-develop-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
-
 
       - name: Display contents
         working-directory: builder

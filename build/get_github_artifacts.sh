@@ -13,7 +13,7 @@ then
     echo "Where:         {run_id} = ########"
     echo "       {password_token} = Users Github password or token"
     echo "            {repo_name} = Repository name"
-    echo "        {artifact_list} = A file containing and artifact list or"
+    echo "        {artifact_list} = A file containing an artifact list or"
     echo "                          a space separated list of quoated artifacts"
     echo
     echo "Examples:"
