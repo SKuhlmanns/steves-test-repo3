@@ -116,7 +116,7 @@ jobs:
           #branch: ${{env.LIB_BRANCH}}
            # Optional, will use specified workflow run
           # run_id: 1122334455
-          event: workflow_dispatch
+          #event: workflow_dispatch
           name: version-num-${{env.LIB_BRANCH}}-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
@@ -129,7 +129,7 @@ jobs:
           #branch: ${{env.COMM_BRANCH}}
            # Optional, will use specified workflow run
            #run_id: 1122334455
-          event: workflow_dispatch
+          #event: workflow_dispatch
           name: version-num-${{env.COMM_BRANCH}}-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
