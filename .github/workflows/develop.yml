@@ -158,7 +158,7 @@ jobs:
           # will download all artifacts if not specified
           # and extract them in respective subdirectories
           # https://github.com/actions/download-artifact#download-all-artifacts
-          #name: artifact_name
+          name: version-num-develop-txt
           # Optional, directory where to extract artifact
           path: builder
           # Optional, defaults to current repo
