@@ -63,51 +63,27 @@ jobs:
         run: |
           mkdir -p builder
 
-      - name: Download run_id from steves-test-repo
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Library artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.LIB_BRANCH }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          workflow: manual.yml
+          #branch: develop
+          name: version-num-develop-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
 
-      - name: Get Library artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.LIB_BRANCH }}.txt
-          run_id=`cat run_id-${{ env.LIB_BRANCH }}.txt`
-          rm run_id-${{ env.LIB_BRANCH }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
-
-      - name: Display Library contents
-        working-directory: builder
-        run: |
-          ls -l
-          cat version_num*.txt
-
-      - name: Download run_id from steves-test-repo2
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Comm artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          workflow: manual.yml
+          #branch: develop
+          name: version-num-develop-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
 
-      - name: Get Comm artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.BRANCH_NAME }}.txt
-          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-          rm run_id-${{ env.BRANCH_NAME }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
-
-      - name: Display Comm contents
+      - name: Display contents
         working-directory: builder
         run: |
           ls -l
