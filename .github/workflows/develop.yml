@@ -109,24 +109,61 @@ jobs:
           echo "PHASE ID: ${PHASE_ID}"
           echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
-      - name: Download run_id from steves-test-repo2
-        uses: aochmann/actions-download-artifact@1.0.4
-        with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          latest: true
-          path: builder
-          repo: SKuhlmanns/steves-test-repo2
+#      - name: Download run_id from steves-test-repo2
+#        uses: aochmann/actions-download-artifact@1.0.4
+#        with:
+#          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
+#          name: run_id-${{ env.BRANCH_NAME }}.txt
+#          latest: true
+#          path: builder
+#          repo: SKuhlmanns/steves-test-repo2
 
-      - name: Get Comm artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.BRANCH_NAME }}.txt
-          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-          rm run_id-${{ env.BRANCH_NAME }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
+#      - name: Get Comm artifacts
+#        working-directory: builder
+#        run: |
+#          # Set the run_id
+#          cat run_id-${{ env.BRANCH_NAME }}.txt
+#          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
+#          rm run_id-${{ env.BRANCH_NAME }}.txt
+#          # Use the run_id and token/password to get artifacts with an external bash script
+#          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+        # Optional, GitHub token
+        github_token: ${{secrets.KUHLMANNS_TOKEN}}
+        # Required, workflow file name or ID
+        workflow: develop.yml
+        # Optional, the status or conclusion of a completed workflow to search for
+        # Can be one of a workflow conclusion::
+        # "failure", "success", "neutral", "cancelled", "skipped", "timed_out", "action_required"
+        # Or a workflow status:
+        # "completed", "in_progress", "queued"
+        # Default: "completed,success"
+        ##workflow_conclusion: success
+        # Optional, will get head commit SHA
+        ##pr: ${{github.event.pull_request.number}}
+        # Optional, no need to specify if PR is
+        ##commit: ${{github.event.pull_request.head.sha}}
+        # Optional, will use the branch
+        branch: develop
+        # Optional, defaults to all types
+        event: push
+        # Optional, will use specified workflow run
+        ##run_id: 1122334455
+        # Optional, run number from the workflow
+        ##run_number: 34
+        # Optional, uploaded artifact name,
+        # will download all artifacts if not specified
+        # and extract them in respective subdirectories
+        # https://github.com/actions/download-artifact#download-all-artifacts
+        #name: artifact_name
+        # Optional, directory where to extract artifact
+        path: builder
+        # Optional, defaults to current repo
+        ##repo: ${{github.repository}}
+        repo: SKuhlmanns/steves-test-repo2
 
       - name: Display Comm contents
         working-directory: builder
