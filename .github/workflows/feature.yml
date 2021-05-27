@@ -59,7 +59,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: develop.yml
+          workflow: feature.yml
           #branch: develop
           name: version-num-develop-txt
           path: builder
@@ -69,7 +69,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
-          workflow: develop.yml
+          workflow: feature.yml
           #branch: develop
           name: version-num-develop-txt
           path: builder
