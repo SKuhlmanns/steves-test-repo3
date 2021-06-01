@@ -41,15 +41,15 @@ jobs:
           elif [[ ${BRANCH_NAME} == develop ]]; then
             echo "Error - Do not use a develop or release branch!"
             exit 1
-#          else 
-#            echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-#            LIB_BRANCH=`echo ${{ github.event.inputs.LIB_BRANCH }} | tr "/" "-"`
-#            echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
-#            COMM_BRANCH=`echo ${{ github.event.inputs.COMM_BRANCH }} | tr "/" "-"`
-#            echo "COMM_BRANCH=${COMM_BRANCH}" >> $GITHUB_ENV
-#            echo "BRANCH_NAME:${BRANCH_NAME}"
-#            echo "LIB_BRANCH:${LIB_BRANCH}"
-#            echo "COMM_BRANCH:${COMM_BRANCH}"
+          #else 
+          #  echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+          #  LIB_BRANCH=`echo ${{ github.event.inputs.LIB_BRANCH }} | tr "/" "-"`
+          #  echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
+          #  COMM_BRANCH=`echo ${{ github.event.inputs.COMM_BRANCH }} | tr "/" "-"`
+          #  echo "COMM_BRANCH=${COMM_BRANCH}" >> $GITHUB_ENV
+          #  echo "BRANCH_NAME:${BRANCH_NAME}"
+          #  echo "LIB_BRANCH:${LIB_BRANCH}"
+          #  echo "COMM_BRANCH:${COMM_BRANCH}"
           fi
 
       - name: Checkout code
