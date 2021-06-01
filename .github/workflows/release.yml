@@ -24,10 +24,10 @@ jobs:
       PHASE_ID: b
 
     steps:
-      - name: Set branch name from github reference
+      - name: Check and set branch name
         run: |
           BRANCH_NAME=`basename ${{ github.ref }}`
-          if [[ ${BRANCH_NAME} == *'release_v'* ]]; then
+          if [[ ${BRANCH_NAME} == 'release_v'* ]] || [[ ${BRANCH_NAME} == 'release/release_v'* ]]; then
             echo "BRANCH_NAME: ${BRANCH_NAME}"
             echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
           else
@@ -68,7 +68,12 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           workflow: release.yml
+          #workflow_conclusion: "completed,success"
           branch: ${{env.BRANCH_NAME}}
+          # Optional, will use specified workflow run
+          #run_id: 1122334455
+          #run_number: 34
+          #event: workflow_dispatch
           name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
@@ -88,8 +93,6 @@ jobs:
         run: |
           ls -l
           cat version_num*.txt
-          echo "PHASE ID: ${PHASE_ID}"
-          echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
       - name: Build the application
         working-directory: build
@@ -126,9 +129,9 @@ jobs:
 #    needs: linux-build
 #    runs-on: ubuntu-latest
 #    steps:
-#      - name: Trigger - steves-test-repo3 event
+#      - name: Trigger - steves-test-repo4 event
 #        run: |
-#          curl -X POST https://api.github.com/repos/SKuhlmanns/steves-test-repo3/actions/workflows/release.yml/dispatches \
+#          curl -X POST https://api.github.com/repos/SKuhlmanns/steves-test-repo4/actions/workflows/release.yml/dispatches \
 #          -H 'Accept: application/vnd.github.v3+json' \
 #          -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} \
 #          -d '{"ref":"${{ github.ref }}"}'

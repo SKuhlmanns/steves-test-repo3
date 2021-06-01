@@ -3,9 +3,8 @@ name: Build tagged releases
 on: 
   push:
     tags:
-      - COMM_*    # Push events matching refs/heads/COMM_* tags
+      - MC_*      # Push events matching refs/heads/MC_* tags
       - NOVOS_*   # Push events matching refs/heads/NOVOS_* tags
-#  workflow_dispatch:
 
 env:
   DISPLAY_CONTEXT: ${{ secrets.DISPLAY_CONTEXT }} # To display github context for debugging
@@ -48,82 +47,68 @@ jobs:
           echo
           echo "$STEPS_CONTEXT"
 
-      - name: Set tag names from github reference
+      - name: Set tag names
         run: |
+          MC_TAG_NAME=`basename ${{ github.ref }}`
           COMM_TAG_NAME=`basename ${{ github.ref }}`
           LIB_TAG_NAME=`basename ${{ github.ref }}`
-          if [[ ${COMM_TAG_NAME} == 'COMM'* ]]; then
-            VERSION=`echo ${COMM_TAG_NAME} | cut -d"_" -f2`
+          if [[ ${MC_TAG_NAME} == 'MC'* ]]; then
+            VERSION=`echo ${MC_TAG_NAME} | cut -d"_" -f2`
+            COMM_TAG_NAME=COMM_${VERSION}
             LIB_TAG_NAME=LIB_${VERSION}
           fi
+          echo "MC_TAG_NAME: ${MC_TAG_NAME}"
           echo "COMM_TAG_NAME: ${COMM_TAG_NAME}"
           echo "LIB_TAG_NAME: ${LIB_TAG_NAME}"
+          echo "MC_TAG_NAME=${MC_TAG_NAME}" >> $GITHUB_ENV
           echo "COMM_TAG_NAME=${COMM_TAG_NAME}" >> $GITHUB_ENV
           echo "LIB_TAG_NAME=${LIB_TAG_NAME}" >> $GITHUB_ENV
 
-      - name: Download run_id from steves-test-repo
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Library artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.LIB_TAG_NAME }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          # Required, workflow file name or ID
+          workflow: tag.yml
+          #workflow_conclusion: "completed,success"
+          branch: ${{env.LIB_TAG_NAME}}
+          # Optional, will use specified workflow run
+          #run_id: ${{env.RUN_ID}}
+          #run_number: 34
+          #event: workflow_dispatch
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
 
-      - name: Get Library artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.LIB_TAG_NAME }}.txt
-          run_id=`cat run_id-${{ env.LIB_TAG_NAME }}.txt`
-          rm run_id-${{ env.LIB_TAG_NAME }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
-
-      - name: Display Library contents
-        working-directory: builder
-        run: |
-          ls -l
-          cat version_num*.txt
-          echo "PHASE ID: ${PHASE_ID}"
-          echo "BUILD NUMBER: ${BUILD_NUMBER}"
-
-      - name: Download run_id from steves-test-repo2
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Comm artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          # Required, workflow file name or ID
+          workflow: tag.yml
+          #workflow_conclusion: "completed,success"
+          branch: ${{env.COMM_TAG_NAME}}
+          # Optional, will use specified workflow run
+          #run_id: ${{env.RUN_ID}}
+          #run_number: 34
+          #event: workflow_dispatch
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
 
-      - name: Get Comm artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.BRANCH_NAME }}.txt
-          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-          rm run_id-${{ env.BRANCH_NAME }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
-
-      - name: Display Comm contents
+      - name: Display contents
         working-directory: builder
         run: |
           ls -l
           cat version_num*.txt
-          echo "PHASE ID: ${PHASE_ID}"
-          echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
       - name: Build the application
         working-directory: build
         run: |
           echo "Repo Owner:" ${{ github.repository_owner }}
-          echo "Run ID:" ${{ github.run_id }}
-          echo ${{ github.run_id }} > run_id-${{ env.COMM_TAG_NAME }}.txt
 
           export VER_NUM=`cat version.txt` 
-          echo "${VER_NUM}${PHASE_ID}-${BUILD_NUMBER}" > version_num_comm.txt
+          echo "${VER_NUM}${PHASE_ID}-${BUILD_NUMBER}" > version_num_mc.txt
           PHASE_ID=${PHASE_ID}
           echo "PHASE ID: ${PHASE_ID}"
           cat version_num*.txt
@@ -133,26 +118,16 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-${{ env.COMM_TAG_NAME }}-txt
+          name: version-txt
           retention-days: 90
           path: |
             build/version.txt
-#            build/version_num_comm.txt
 
       - name: Upload version_num.txt artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-num-${{ env.COMM_TAG_NAME }}-txt
+          name: version-num-txt
           retention-days: 90
           path: |
-            build/version_num_comm.txt
-
-      - name: Upload run_id artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: run_id-${{ env.COMM_TAG_NAME }}.txt
-          retention-days: 90
-          path: |
-            build/run_id-${{ env.COMM_TAG_NAME }}.txt
+            build/version_num_mc.txt

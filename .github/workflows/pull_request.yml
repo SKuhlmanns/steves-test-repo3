@@ -26,11 +26,11 @@ jobs:
         run: |
           mkdir -p builder
 
-      - name: Set branch from github reference
-        run: |
-          BRANCH_NAME=`echo ${{ github.head_ref }} | tr "/" "-"`
-          echo "BRANCH_NAME: ${BRANCH_NAME}"
-          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+#      - name: Set branch name
+#        run: |
+#          BRANCH_NAME=`echo ${{ github.head_ref }} | tr "/" "-"`
+#          echo "BRANCH_NAME: ${BRANCH_NAME}"
+#          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
 
       # Use this to help debug issues
       - name: Dump context
@@ -53,107 +53,107 @@ jobs:
           echo
           echo "$STEPS_CONTEXT"
 
-      # Check to see if the libraries feature branch (head_ref) exists.
+      # Check to see if the libraries user branch (head_ref) exists.
       # If not, use the target branch (base_ref).
-      - name: Get libraries branch 
+      - name: Set libraries branch and workflow
         run: |
           curl -sH "Accept: application/vnd.github.v3+json" \
           -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
           https://api.github.com/repos/SKuhlmanns/steves-test-repo/branches/${{ github.head_ref }}
+          # If the user branch does not exist, use the branch name to determine if the
+          # target branch is a release or develop (default) branch and set the workflow
+          # variable accordingly.
           if grep -q "Branch not found" curl_output.txt; then
-            LIB_BRANCH=`echo ${{ github.base_ref }} | tr "/" "-"`
-            echo "LIB_BRANCH=${LIB_BRANCH}" 
-            echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV 
+            LIB_BRANCH=`echo ${{ github.base_ref }}`
+            if [[ ${LIB_BRANCH} == *release* ]]; then
+              LIB_WORKFLOW=release
+            else
+              LIB_WORKFLOW=develop
+              LIB_BRANCH=develop
+            fi
           else
-            LIB_BRANCH=`echo ${{ github.head_ref }} | tr "/" "-"`
-            echo "LIB_BRANCH=${LIB_BRANCH}" 
-            echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV 
+            LIB_BRANCH=`echo ${{ github.head_ref }}`
+            LIB_WORKFLOW=pull_request
           fi
+          echo "LIB_BRANCH=${LIB_BRANCH}"
+          echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
+          echo "LIB_WORKFLOW=${LIB_WORKFLOW}"
+          echo "LIB_WORKFLOW=${LIB_WORKFLOW}" >> $GITHUB_ENV
           rm -f curl_output.txt
 
-#      - name: Download libraries artifacts
-#        if: ${{ success() }}
-#        uses: aochmann/actions-download-artifact@1.0.4
-#        with:
-#          # Optional, GitHub token
-#          github_token: ${{secrets.KUHLMANNS_TOKEN}}
-#
-#          # Optional, uploaded artifact name,
-#          # will download all artifacts if not specified
-#          # and extract them in respective subdirectories
-#          # https://github.com/actions/download-artifact#download-all-artifacts
-#          name: version-num-${{ env.LIB_BRANCH }}-txt
-#
-#          # Optional, download latest artifact
-#          latest: true
-#
-#          # Optional, directory where to extract artifact
-#          path: builder
-#
-#          # Optional, defaults to current repo
-#          repo: SKuhlmanns/steves-test-repo
+      # Check to see if the COMM user branch (head_ref) exists.
+      # If not, use the target branch (base_ref).
+      - name: Set libraries branch and workflow
+        run: |
+          curl -sH "Accept: application/vnd.github.v3+json" \
+          -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
+          https://api.github.com/repos/SKuhlmanns/steves-test-repo2/branches/${{ github.head_ref }}
+          # If the user branch does not exist, use the branch name to determine if the
+          # target branch is a release or develop (default) branch and set the workflow
+          # variable accordingly.
+          if grep -q "Branch not found" curl_output.txt; then
+            COMM_BRANCH=`echo ${{ github.base_ref }}`
+            if [[ ${COMM_BRANCH} == *release* ]]; then
+              COMM_WORKFLOW=release
+            else
+              COMM_WORKFLOW=develop
+              COMM_BRANCH=develop
+            fi
+          else
+            COMM_BRANCH=`echo ${{ github.head_ref }}`
+            COMM_WORKFLOW=pull_request
+          fi
+          echo "COMM_BRANCH=${COMM_BRANCH}"
+          echo "COMM_BRANCH=${COMM_BRANCH}" >> $GITHUB_ENV
+          echo "COMM_WORKFLOW=${COMM_WORKFLOW}"
+          echo "COMM_WORKFLOW=${COMM_WORKFLOW}" >> $GITHUB_ENV
+          rm -f curl_output.txt
 
-      - name: Download run_id from steves-test-repo
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Library artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.LIB_BRANCH }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          # Required, workflow file name or ID
+          workflow: ${{env.LIB_WORKFLOW}}.yml
+          #workflow_conclusion: "completed,success"
+          branch: ${{env.LIB_BRANCH}}
+          # Optional, will use specified workflow run
+          #run_id: 1122334455
+          #run_number: 34
+          #event: workflow_dispatch
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
 
-      - name: Get Library artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.LIB_BRANCH }}.txt
-          run_id=`cat run_id-${{ env.LIB_BRANCH }}.txt`
-          rm run_id-${{ env.LIB_BRANCH }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo lib_artifact.lst
-
-      - name: Display Library contents
-        working-directory: builder
-        run: |
-          ls -l
-          cat version_num*.txt
-
-      - name: Download run_id from steves-test-repo2
-        uses: aochmann/actions-download-artifact@1.0.4
+      - name: Download Comm artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{ secrets.KUHLMANNS_TOKEN }}
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          latest: true
+          github_token: ${{secrets.KUHLMANNS_TOKEN}}
+          # Required, workflow file name or ID
+          workflow: ${{env.COMM_WORKFLOW}}.yml
+          #workflow_conclusion: "completed,success"
+          branch: ${{env.COMM_BRANCH}}
+          # Optional, will use specified workflow run
+          #run_id: 1122334455
+          #run_number: 34
+          #event: workflow_dispatch
+          name: version-num-txt
           path: builder
-          repo: SKuhlmanns/steves-test-repo2
+          repo: SKuhlmanns/steves-test-repo
 
-      - name: Get Comm artifacts
-        working-directory: builder
-        run: |
-          # Set the run_id
-          cat run_id-${{ env.BRANCH_NAME }}.txt
-          run_id=`cat run_id-${{ env.BRANCH_NAME }}.txt`
-          rm run_id-${{ env.BRANCH_NAME }}.txt
-          # Use the run_id and token/password to get artifacts with an external bash script
-          ../build/get_github_artifacts.sh ${run_id} ${{ secrets.KUHLMANNS_TOKEN }} steves-test-repo2 comm_artifact.lst
-
-      - name: Display Comm contents
+      - name: Display contents
         working-directory: builder
         run: |
           ls -l
           cat version_num*.txt
-          echo "PHASE ID: ${PHASE_ID}"
-          echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
       - name: Build the application
         working-directory: build
         run: |
           echo "Repo Owner:" ${{ github.repository_owner }}
-          echo "Run ID:" ${{ github.run_id }}
-          echo ${{ github.run_id }} > run_id-${{ env.BRANCH_NAME }}.txt
 
           export VER_NUM=`cat version.txt`
-          echo ${VER_NUM}${PHASE_ID}-${BUILD_NUMBER} > version_num_comm.txt
+          echo ${VER_NUM}${PHASE_ID}-${BUILD_NUMBER} > version_num_mc.txt
           echo "PHASE ID: ${PHASE_ID}"
           echo "BUILD NUMBER: ${BUILD_NUMBER}"
           cat version_num*.txt
@@ -164,26 +164,17 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-${{ env.BRANCH_NAME }}-txt
+          name: version-txt
           retention-days: 14
           path: |
             build/version.txt
-#            build/version_num_comm.txt
+#            build/version_num_mc.txt
 
       - name: Upload version_num.txt artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-num-${{ env.BRANCH_NAME }}-txt
+          name: version-num-txt
           retention-days: 14
           path: |
-            build/version_num_comm.txt
-
-      - name: Upload run_id artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          retention-days: 14
-          path: |
-            build/run_id-${{ env.BRANCH_NAME }}.txt
+            build/version_num_mc.txt

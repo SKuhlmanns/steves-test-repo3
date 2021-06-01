@@ -60,8 +60,8 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           workflow: feature.yml
-          #branch: develop
-          name: version-num-develop-txt
+          branch: ${{env.BRANCH_NAME}}
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
 
@@ -70,8 +70,8 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           workflow: feature.yml
-          #branch: develop
-          name: version-num-develop-txt
+          branch: ${{env.BRANCH_NAME}}
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
 
@@ -87,11 +87,9 @@ jobs:
         working-directory: build
         run: |
           echo "Repo Owner:" ${{ github.repository_owner }}
-          echo "Run ID:" ${{ github.run_id }}
-          echo ${{ github.run_id }} > run_id-${{ env.BRANCH_NAME }}.txt
 
           export VER_NUM=`cat version.txt` 
-          echo "${VER_NUM}${{ env.PHASE_ID }}-${BUILD_NUMBER}" > version_num_comm.txt
+          echo "${VER_NUM}${{ env.PHASE_ID }}-${BUILD_NUMBER}" > version_num_mc.txt
           PHASE_ID=${{ env.PHASE_ID }}
           echo "PHASE ID: ${PHASE_ID}"
           cat version_num*.txt
@@ -101,38 +99,28 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-${{ env.BRANCH_NAME }}-txt
+          name: version-txt
           retention-days: 45
           path: |
             build/version.txt
-#            build/version_num_comm.txt
 
       - name: Upload version_num.txt artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: version-num-${{ env.BRANCH_NAME }}-txt
+          name: version-num-txt
           retention-days: 45
           path: |
-            build/version_num_comm.txt
-
-      - name: Upload run_id artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: run_id-${{ env.BRANCH_NAME }}.txt
-          retention-days: 45
-          path: |
-            build/run_id-${{ env.BRANCH_NAME }}.txt
+            build/version_num_mc.txt
 
   # Trigger the downstream project(s)/repos
 #  linux-triggers:
 #    needs: linux-build
 #    runs-on: ubuntu-latest
 #    steps:
-#      - name: Trigger - steves-test-repo3 event
+#      - name: Trigger - steves-test-repo4 event
 #        run: |
-#          curl -X POST https://api.github.com/repos/SKuhlmanns/steves-test-repo3/actions/workflows/feature.yml/dispatches \
+#          curl -X POST https://api.github.com/repos/SKuhlmanns/steves-test-repo4/actions/workflows/feature.yml/dispatches \
 #          -H 'Accept: application/vnd.github.v3+json' \
 #          -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} \
 #          -d '{"ref":"${{ github.ref }}"}'
