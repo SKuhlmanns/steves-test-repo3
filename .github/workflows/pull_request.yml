@@ -139,7 +139,7 @@ jobs:
           #event: workflow_dispatch
           name: version-num-txt
           path: builder
-          repo: SKuhlmanns/steves-test-repo
+          repo: SKuhlmanns/steves-test-repo2
 
       - name: Display contents
         working-directory: builder
