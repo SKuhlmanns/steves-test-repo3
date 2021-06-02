@@ -55,58 +55,80 @@ jobs:
 
       # Check to see if the libraries user branch (head_ref) exists.
       # If not, use the target branch (base_ref).
-      - name: Set libraries branch and workflow
+      - name: Set libraries workflow and git hash 
         run: |
           curl -sH "Accept: application/vnd.github.v3+json" \
           -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
           https://api.github.com/repos/SKuhlmanns/steves-test-repo/branches/${{ github.head_ref }}
           # If the user branch does not exist, use the branch name to determine if the
           # target branch is a release or develop (default) branch and set the workflow
-          # variable accordingly.
+          # variable accordingly. Also, query the branch for the lastest git hash. 
+          LIB_EVENT=""
           if grep -q "Branch not found" curl_output.txt; then
+            curl -sH "Accept: application/vnd.github.v3+json" \
+            -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
+            https://api.github.com/repos/SKuhlmanns/steves-test-repo/branches/${{ github.base_ref }}
+            GIT_HASH=`grep 'sha":' curl_output.txt | cut -d":" -f2 | cut -d'"' -f2 | head -1`
             LIB_BRANCH=`echo ${{ github.base_ref }}`
             if [[ ${LIB_BRANCH} == *release* ]]; then
-              LIB_WORKFLOW=release
+              LIB_WORKFLOW=reLease.yml
             else
-              LIB_WORKFLOW=develop
+              LIB_WORKFLOW=develop.yml
               LIB_BRANCH=develop
             fi
           else
+            GIT_HASH=`grep 'sha":' curl_output.txt | cut -d":" -f2 | cut -d'"' -f2 | head -1`
             LIB_BRANCH=`echo ${{ github.head_ref }}`
-            LIB_WORKFLOW=pull_request
+            LIB_WORKFLOW=pull_request.yml
+            LIB_EVENT=pull_request
           fi
           echo "LIB_BRANCH=${LIB_BRANCH}"
           echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
           echo "LIB_WORKFLOW=${LIB_WORKFLOW}"
           echo "LIB_WORKFLOW=${LIB_WORKFLOW}" >> $GITHUB_ENV
+          echo "LIB_EVENT=${LIB_EVENT}"
+          echo "LIB_EVENT=${LIB_EVENT}" >> $GITHUB_ENV
+          echo "LIB_COMMIT_HASH=${GIT_HASH}"
+          echo "LIB_COMMIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
           rm -f curl_output.txt
 
       # Check to see if the COMM user branch (head_ref) exists.
       # If not, use the target branch (base_ref).
-      - name: Set Comm branch and workflow
+      - name: Set Comm workflow and git hash 
         run: |
           curl -sH "Accept: application/vnd.github.v3+json" \
           -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
           https://api.github.com/repos/SKuhlmanns/steves-test-repo2/branches/${{ github.head_ref }}
           # If the user branch does not exist, use the branch name to determine if the
           # target branch is a release or develop (default) branch and set the workflow
-          # variable accordingly.
+          # variable accordingly. Also, query the branch for the lastest git hash. 
+          COMM_EVENT=""
           if grep -q "Branch not found" curl_output.txt; then
+            curl -sH "Accept: application/vnd.github.v3+json" \
+            -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
+            https://api.github.com/repos/SKuhlmanns/steves-test-repo2/branches/${{ github.base_ref }}
+            GIT_HASH=`grep 'sha":' curl_output.txt | cut -d":" -f2 | cut -d'"' -f2 | head -1`
             COMM_BRANCH=`echo ${{ github.base_ref }}`
             if [[ ${COMM_BRANCH} == *release* ]]; then
-              COMM_WORKFLOW=release
+              COMM_WORKFLOW=release.yml
             else
-              COMM_WORKFLOW=develop
+              COMM_WORKFLOW=develop.yml
               COMM_BRANCH=develop
             fi
           else
+            GIT_HASH=`grep 'sha":' curl_output.txt | cut -d":" -f2 | cut -d'"' -f2 | head -1`
             COMM_BRANCH=`echo ${{ github.head_ref }}`
-            COMM_WORKFLOW=pull_request
+            COMM_WORKFLOW=pull_request.yml
+            COMM_EVENT=pull_request
           fi
           echo "COMM_BRANCH=${COMM_BRANCH}"
           echo "COMM_BRANCH=${COMM_BRANCH}" >> $GITHUB_ENV
           echo "COMM_WORKFLOW=${COMM_WORKFLOW}"
           echo "COMM_WORKFLOW=${COMM_WORKFLOW}" >> $GITHUB_ENV
+          echo "COMM_EVENT=${COMM_EVENT}"
+          echo "COMM_EVENT=${COMM_EVENT}" >> $GITHUB_ENV
+          echo "COMM_COMMIT_HASH=${GIT_HASH}"
+          echo "COMM_COMMIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
           rm -f curl_output.txt
 
       - name: Download Library artifacts
@@ -114,13 +136,16 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           # Required, workflow file name or ID
-          workflow: ${{env.LIB_WORKFLOW}}.yml
+          workflow: ${{ env.LIB_WORKFLOW }}
+          # Do not specify pr, commit, branch, run_id together or
+          # workflow_conclusion and run_id together Pick just on of each or none.
           #workflow_conclusion: "completed,success"
-          branch: ${{env.LIB_BRANCH}}
+          commit: ${{env.LIB_COMMIT_HASH}}
+          #branch: ${{ env.LIB_BRANCH }}
           # Optional, will use specified workflow run
           #run_id: 1122334455
           #run_number: 34
-          #event: workflow_dispatch
+          event: ${{ env.LIB_EVENT }}
           name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo
@@ -130,13 +155,16 @@ jobs:
         with:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           # Required, workflow file name or ID
-          workflow: ${{env.COMM_WORKFLOW}}.yml
+          workflow: ${{env.COMM_WORKFLOW}}
           #workflow_conclusion: "completed,success"
-          branch: ${{env.COMM_BRANCH}}
+          # Do not specify pr, commit, branch, run_id together or
+          # workflow_conclusion and run_id together Pick just on of each or none.
+          #branch: ${{env.COMM_BRANCH}}
+          commit: ${{env.COMM_COMMIT_HASH}}
           # Optional, will use specified workflow run
           #run_id: 1122334455
           #run_number: 34
-          #event: workflow_dispatch
+          event: ${{ env.COMM_EVENT }}
           name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
