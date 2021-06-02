@@ -91,7 +91,7 @@ jobs:
           # will download all artifacts if not specified
           # and extract them in respective subdirectories
           # https://github.com/actions/download-artifact#download-all-artifacts
-          name: version-num-develop-txt
+          name: version-num-txt
           # Optional, directory where to extract artifact
           path: builder
           # Optional, defaults to current repo
@@ -104,7 +104,7 @@ jobs:
           github_token: ${{secrets.KUHLMANNS_TOKEN}}
           workflow: develop.yml
           branch: develop
-          name: version-num-develop-txt
+          name: version-num-txt
           path: builder
           repo: SKuhlmanns/steves-test-repo2
 
