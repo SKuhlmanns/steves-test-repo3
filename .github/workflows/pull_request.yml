@@ -83,7 +83,7 @@ jobs:
 
       # Check to see if the COMM user branch (head_ref) exists.
       # If not, use the target branch (base_ref).
-      - name: Set libraries branch and workflow
+      - name: Set Comm branch and workflow
         run: |
           curl -sH "Accept: application/vnd.github.v3+json" \
           -u ${{ secrets.KUHLMANNS_CURL_TOKEN }} -o curl_output.txt \
