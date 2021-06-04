@@ -134,6 +134,7 @@ jobs:
           retention-days: 30
           path: |
             build/version.txt
+#            build/version_num_mc.txt
 
       - name: Upload version_num.txt artifact
         if: ${{ success() }}

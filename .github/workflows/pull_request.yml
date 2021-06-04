@@ -26,12 +26,6 @@ jobs:
         run: |
           mkdir -p builder
 
-#      - name: Set branch name
-#        run: |
-#          BRANCH_NAME=`echo ${{ github.head_ref }} | tr "/" "-"`
-#          echo "BRANCH_NAME: ${BRANCH_NAME}"
-#          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-
       # Use this to help debug issues
       - name: Dump context
         # See Settings -> Secrets to turn this step on and off
@@ -172,7 +166,7 @@ jobs:
       - name: Display contents
         working-directory: builder
         run: |
-          ls -l
+          ls -lR
           cat version_num*.txt
 
       - name: Build the application
