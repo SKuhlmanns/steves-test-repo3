@@ -65,7 +65,7 @@ jobs:
             GIT_HASH=`grep 'sha":' curl_output.txt | cut -d":" -f2 | cut -d'"' -f2 | head -1`
             LIB_BRANCH=`echo ${{ github.base_ref }}`
             if [[ ${LIB_BRANCH} == *release* ]]; then
-              LIB_WORKFLOW=reLease.yml
+              LIB_WORKFLOW=release.yml
             else
               LIB_WORKFLOW=develop.yml
               LIB_BRANCH=develop
