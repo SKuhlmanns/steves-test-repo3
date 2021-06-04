@@ -21,6 +21,12 @@ jobs:
       PHASE_ID: f
 
     steps:
+      - name: Set branch name
+        run: |
+          BRANCH_NAME=`basename ${{ github.ref }}`
+          echo "BRANCH_NAME: ${BRANCH_NAME}"
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -49,12 +55,6 @@ jobs:
           echo
           echo "$STEPS_CONTEXT"
 
-      - name: Set branch name from github reference
-        run: |
-          BRANCH_NAME=`basename ${{ github.ref }}`
-          echo "BRANCH_NAME: ${BRANCH_NAME}"
-          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-
       - name: Download Library artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -78,10 +78,8 @@ jobs:
       - name: Display contents
         working-directory: builder
         run: |
-          ls -l
+          ls -lR
           cat version_num*.txt
-          echo "PHASE ID: ${PHASE_ID}"
-          echo "BUILD NUMBER: ${BUILD_NUMBER}"
 
       - name: Build the application
         working-directory: build

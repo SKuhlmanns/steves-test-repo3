@@ -32,24 +32,12 @@ jobs:
       PHASE_ID: x
 
     steps:
-      - name: Check and set branch names
+      - name: Check branch name
         run: |
-          BRANCH_NAME=`echo ${{ github.ref }} | cut -d"/" -f3- | tr "/" "-"`
-          if [[ ${BRANCH_NAME} == 'release'* ]]; then
+          BRANCH_NAME=`echo ${{ github.ref }} | cut -d"/" -f3-`
+          if [[ ${BRANCH_NAME} == 'release'* ]] || [[ ${BRANCH_NAME} == develop ]]; then
             echo "Error - Do not use a develop or release branch!"
             exit 1
-          elif [[ ${BRANCH_NAME} == develop ]]; then
-            echo "Error - Do not use a develop or release branch!"
-            exit 1
-          #else 
-          #  echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-          #  LIB_BRANCH=`echo ${{ github.event.inputs.LIB_BRANCH }} | tr "/" "-"`
-          #  echo "LIB_BRANCH=${LIB_BRANCH}" >> $GITHUB_ENV
-          #  COMM_BRANCH=`echo ${{ github.event.inputs.COMM_BRANCH }} | tr "/" "-"`
-          #  echo "COMM_BRANCH=${COMM_BRANCH}" >> $GITHUB_ENV
-          #  echo "BRANCH_NAME:${BRANCH_NAME}"
-          #  echo "LIB_BRANCH:${LIB_BRANCH}"
-          #  echo "COMM_BRANCH:${COMM_BRANCH}"
           fi
 
       - name: Checkout code
@@ -58,6 +46,25 @@ jobs:
       - name: Make builder directory
         run: |
           mkdir -p builder
+
+      - name: Dump context
+        if: ${{ env.DISPLAY_CONTEXT == 'true' }}
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          STEPS_CONTEXT: ${{ toJSON(steps) }}
+        run: |
+          echo "GITHUB CONTEXT:"
+          echo
+          echo "$GITHUB_CONTEXT"
+          echo
+          echo "JOB CONTEXT:"
+          echo
+          echo "$JOB_CONTEXT"
+          echo
+          echo "STEPS CONTEXT:"
+          echo
+          echo "$STEPS_CONTEXT"
 
       - name: Download Library artifacts
         uses: dawidd6/action-download-artifact@v2
@@ -96,7 +103,7 @@ jobs:
       - name: Display contents
         working-directory: builder
         run: |
-          ls -l
+          ls -lR
           cat version_num*.txt
 
       - name: Build the application
@@ -129,22 +136,3 @@ jobs:
           retention-days: 14
           path: |
             build/version_num_mc.txt
-
-      - name: Dump context
-        if: ${{ env.DISPLAY_CONTEXT == 'true' }}
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-          JOB_CONTEXT: ${{ toJSON(job) }}
-          STEPS_CONTEXT: ${{ toJSON(steps) }}
-        run: |
-          echo "GITHUB CONTEXT:"
-          echo
-          echo "$GITHUB_CONTEXT"
-          echo
-          echo "JOB CONTEXT:"
-          echo
-          echo "$JOB_CONTEXT"
-          echo
-          echo "STEPS CONTEXT:"
-          echo
-          echo "$STEPS_CONTEXT"
