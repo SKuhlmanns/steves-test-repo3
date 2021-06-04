@@ -99,7 +99,7 @@ jobs:
       - name: Display contents
         working-directory: builder
         run: |
-          ls -l
+          ls -lR
           cat version_num*.txt
 
       - name: Build the application
@@ -122,6 +122,7 @@ jobs:
           retention-days: 90
           path: |
             build/version.txt
+#            build/version_num_mc.txt
 
       - name: Upload version_num.txt artifact
         if: ${{ success() }}
