@@ -26,7 +26,7 @@ jobs:
 
   linux-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       BUILD_NUMBER: ${{ github.run_number }}
       PHASE_ID: x
@@ -109,8 +109,7 @@ jobs:
       - name: Build the application
         working-directory: build
         run: |
-          echo "Repo Owner:" ${{ github.repository_owner }}
-
+          #echo "Repo Owner:" ${{ github.repository_owner }}
           export VER_NUM=`cat version.txt` 
           echo "${VER_NUM}${PHASE_ID}-${BUILD_NUMBER}" > version_num_mc.txt
           echo "PHASE ID: ${PHASE_ID}"
